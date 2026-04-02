@@ -94,7 +94,7 @@ for _ in range(args.runs):
 
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name,
-        device_map=device,
+        device_map="auto" if args.use_quantization else device,
         num_labels=num_labels,
         quantization_config=quantization_config,
     )

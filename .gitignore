@@ -1,0 +1,12 @@
+__pycache__/
+wandb/
+output/
+misc/
+jobs/
+.ipynb_checkpoints/
+*.sl
+processed_data/
+model_outputs.json
+results.json
+avg_results.json
+run_settings.json

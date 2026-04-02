@@ -1,3 +1,9 @@
+"""Utility functions for dataset analysis and metric computation.
+
+Provides helpers for computing token length statistics, evaluation metrics
+(accuracy, precision, recall, F1), and aggregating results across runs.
+"""
+
 import numpy as np
 import evaluate
 
@@ -70,7 +76,7 @@ def compute_average_metrics(data):
     return result
 
 
-def compute_fews_hot_nested_avg(nested_evals):
+def compute_few_shot_nested_avg(nested_evals):
     avg_evals = {}
     shots = list(nested_evals[list(nested_evals.keys())[0]].keys())
 

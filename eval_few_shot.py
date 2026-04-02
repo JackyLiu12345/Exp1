@@ -1,3 +1,12 @@
+"""Few-shot in-context learning evaluation script for LLMs.
+
+Evaluates language models using DPP-selected or randomly sampled few-shot examples
+for news classification tasks.
+
+Usage:
+    python eval_few_shot.py --model_name MODEL --dataset_name DATASET --configuration fs_dpp --task_labels LABELS
+"""
+
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -49,6 +58,20 @@ parser.add_argument(
     help="Format of the labels in the model's output: 'string' for text labels or 'int' for integer labels",
 )
 args = parser.parse_args()
+
+# Validate language-task combinations
+valid_languages = {
+    "hp": ["en"],
+    "pl": ["en"],
+    "fn": ["en", "es", "pt"],
+    "ht": ["en", "bg", "ar"],
+}
+if args.task_labels in valid_languages and args.language not in valid_languages[args.task_labels]:
+    parser.error(
+        f"Language '{args.language}' is not supported for task '{args.task_labels}'. "
+        f"Supported: {valid_languages[args.task_labels]}"
+    )
+
 print(args)
 
 
@@ -142,7 +165,7 @@ elif args.task_labels == "pl":
 
 
 def parse_label(model_output):
-    match = re.search(r"==>\s*(\w+)", model_output)
+    match = re.search(r"==>\s*(.+)", model_output)
 
     if not match:
         return None
@@ -322,6 +345,7 @@ for few_shot in range(start, end, step):
 
         preds = []
         refs = []
+        unparseable_outputs = []
 
         irregular_outputs = 0
         regularized_outputs = 0
@@ -375,8 +399,9 @@ for few_shot in range(start, end, step):
                         " >> Failed to get valid prediction after max retries.\n > Forcefully considered false prediction."
                     )
                     skipped_items += 1
+                    unparseable_outputs.append({"index": idx, "run": run, "output": pred, "ground_truth": element["label"]})
 
-                    fallback_label_int = (element["label"] + 1) % num_labels
+                    fallback_label_int = random.randint(0, num_labels - 1)
                     preds.append(fallback_label_int)
                     refs.append(element["label"])
                     continue
@@ -386,6 +411,9 @@ for few_shot in range(start, end, step):
 
         evals = compute_metrics(preds, refs)
         print(json.dumps(evals, indent=4))
+
+        if unparseable_outputs:
+            print(f" > {len(unparseable_outputs)} unparseable outputs in run {run}")
 
         run_evals.append(evals)
 

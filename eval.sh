@@ -65,16 +65,15 @@ cat <<EOF > $JOB_SCRIPT
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
 #SBATCH --qos=regular
-#SBATCH --nodelist=hpc-gpu1
 #SBATCH --job-name=${JOB_TAG}
 #SBATCH --output=${JOB_TAG}_%j.out
 #SBATCH --error=${JOB_TAG}_%j.err
 
 export HF_ENDPOINT=https://hf-mirror.com
-export HF_TOKEN=""
+export HF_TOKEN=\${HF_TOKEN:?"Error: HF_TOKEN environment variable is not set"}
 huggingface-cli login --token \$HF_TOKEN
 
-source /mnt/beegfs/home/michele.maggini/miniconda3/bin/activate unsloth_env
+source \${CONDA_PREFIX:-\$HOME/miniconda3}/bin/activate \${CONDA_ENV:-unsloth_env}
 
 python eval_zero_cot.py \\
   --dataset_name "${DATASET_NAME}" \\

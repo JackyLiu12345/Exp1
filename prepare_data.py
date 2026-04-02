@@ -1,3 +1,12 @@
+"""Dataset preparation script for multilingual news classification experiments.
+
+Supports 8 datasets: CLEF 3A, CLEF 1C, AllSides, Fake.br, Spanish Fake News,
+FakeNewsNet, Hyperpartisan News Headlines, and SemEval 2019.
+
+Usage:
+    python prepare_data.py --dataset_name DATASET --language LANGUAGE
+"""
+
 import pandas as pd
 import json
 import argparse
@@ -170,24 +179,40 @@ def prepare_semeval(dataset_path):
 def main():
     dataset = None
 
-    if args.dataset_name.lower() == "clef_3a":
-        dataset = prepare_clef3a(args.dataset_path)
-    elif args.dataset_name.lower() == "clef_1c":
-        dataset = prepare_clef1c(args.dataset_path, args.language)
-    elif args.dataset_name.lower() == "all_sides":
-        dataset = prepare_allsides(args.dataset_path)
-    elif args.dataset_name.lower() == "fake_br_corpus":
-        dataset = prepare_fakebr_corpus(args.dataset_path)
-    elif args.dataset_name.lower() == "fake_news_corpus_spanish":
-        dataset = prepare_fake_news_corpus_spanish(args.dataset_path)
-    elif args.dataset_name.lower() == "fake_news_net":
-        dataset = prepare_fake_news_net(args.dataset_path)
-    elif args.dataset_name.lower() == "hyperpartisan_news_headlines":
-        dataset = prepare_hyperpartisan_news_headlines(args.dataset_path)
-    elif args.dataset_name.lower() == "semeval_2019":
-        dataset = prepare_semeval(args.dataset_path)
-    else:
-        print(f"Unknown dataset name: {args.dataset_name}")
+    supported_datasets = [
+        "clef_3a", "clef_1c", "all_sides", "fake_br_corpus",
+        "fake_news_corpus_spanish", "fake_news_net",
+        "hyperpartisan_news_headlines", "semeval_2019",
+    ]
+
+    if args.dataset_name.lower() not in supported_datasets:
+        print(f"Unknown dataset name: '{args.dataset_name}'")
+        print(f"Supported datasets: {', '.join(supported_datasets)}")
+        return
+
+    try:
+        if args.dataset_name.lower() == "clef_3a":
+            dataset = prepare_clef3a(args.dataset_path)
+        elif args.dataset_name.lower() == "clef_1c":
+            dataset = prepare_clef1c(args.dataset_path, args.language)
+        elif args.dataset_name.lower() == "all_sides":
+            dataset = prepare_allsides(args.dataset_path)
+        elif args.dataset_name.lower() == "fake_br_corpus":
+            dataset = prepare_fakebr_corpus(args.dataset_path)
+        elif args.dataset_name.lower() == "fake_news_corpus_spanish":
+            dataset = prepare_fake_news_corpus_spanish(args.dataset_path)
+        elif args.dataset_name.lower() == "fake_news_net":
+            dataset = prepare_fake_news_net(args.dataset_path)
+        elif args.dataset_name.lower() == "hyperpartisan_news_headlines":
+            dataset = prepare_hyperpartisan_news_headlines(args.dataset_path)
+        elif args.dataset_name.lower() == "semeval_2019":
+            dataset = prepare_semeval(args.dataset_path)
+    except FileNotFoundError as e:
+        print(f"Error: Data file not found — {e}")
+        print(f"Please ensure the dataset files exist under '{args.dataset_path}/{args.dataset_name}/'")
+        return
+    except Exception as e:
+        print(f"Error preparing dataset '{args.dataset_name}': {e}")
         return
 
     # Ensure output directory exists

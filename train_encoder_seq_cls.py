@@ -97,6 +97,7 @@ for _ in range(args.runs):
         num_labels=num_labels,
         quantization_config=quantization_config,
     )
+    model.resize_token_embeddings(len(tokenizer))
     model.config.use_cache = False
     model.config.pad_token_id = tokenizer.pad_token_id
     model.config.pretraining_tp = 1

@@ -208,7 +208,7 @@ def main():
         elif args.dataset_name.lower() == "semeval_2019":
             dataset = prepare_semeval(args.dataset_path)
     except FileNotFoundError as e:
-        print(f"Error: Data file not found — {e}")
+        print(f"Error: Data file not found - {e}")
         print(f"Please ensure the dataset files exist under '{args.dataset_path}/{args.dataset_name}/'")
         return
     except Exception as e:

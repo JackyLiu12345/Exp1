@@ -2,7 +2,7 @@
 
 #### Supervised fine-tuning experiment
 
-This experiment focuses on using supervised learning to fine-tune LoRA (Low-Rank Adaptation) adapters for sequence classification across various datasets. We conducted all of our tests on a single A100 80GB SXM GPU.
+This experiment focuses on using supervised learning to fine-tune LoRA (Low-Rank Adaptation) adapters for sequence classification across various datasets. We conducted all of our tests on a single A40 30GB NVIDIA GPU.
 
 ##### Models tested:
 

@@ -10,3 +10,7 @@ model_outputs.json
 results.json
 avg_results.json
 run_settings.json
+unparseable_outputs.json
+.env
+venv/
+.venv/

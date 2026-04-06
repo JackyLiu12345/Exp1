@@ -1,3 +1,10 @@
+"""Fine-tuning script for encoder-based models (RoBERTa, mDeBERTa, ModernBERT, etc.)
+using LoRA adapters for sequence classification.
+
+Usage:
+    python train_encoder_seq_cls.py --model_name MODEL --epochs 3 --runs 5
+"""
+
 import torch
 from transformers import (
     AutoModelForSequenceClassification,
@@ -8,7 +15,7 @@ from transformers import (
     BitsAndBytesConfig,
 )
 from peft import LoraConfig, get_peft_model
-from datasets import load_dataset
+from datasets import load_dataset, Value
 import numpy as np
 import evaluate
 import wandb
@@ -46,8 +53,6 @@ wandb.log({"num_runs": args.runs, "language": args.language})
 model_name = args.model_name
 
 tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True)
-tokenizer.pad_token_id = tokenizer.eos_token_id
-# tokenizer.pad_token = tokenizer.eos_token
 if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({"pad_token": "[PAD]"})
 
@@ -63,7 +68,18 @@ dataset_path_test = f"./processed_data/test.json"
 dataset = load_dataset(
     "json", data_files={"train": dataset_path_train, "test": dataset_path_test}
 )
+
+# Create a validation split from the training data
+train_val_split = dataset["train"].train_test_split(test_size=0.1, seed=42)
+dataset["train"] = train_val_split["train"]
+dataset["validation"] = train_val_split["test"]
+
 print(dataset["train"][0])
+
+# Ensure labels are integers (some datasets save labels as strings in JSON)
+for split in dataset:
+    dataset[split] = dataset[split].cast_column("label", Value("int64"))
+
 num_labels = len(dataset["train"].unique("label"))
 print(" > Label num: ", num_labels)
 
@@ -82,14 +98,16 @@ for _ in range(args.runs):
 
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name,
-        device_map=DEVICE,
+        device_map="auto" if args.use_quantization else DEVICE,
         num_labels=num_labels,
+        quantization_config=quantization_config,
     )
+    model.resize_token_embeddings(len(tokenizer))
     model.config.use_cache = False
     model.config.pad_token_id = tokenizer.pad_token_id
     model.config.pretraining_tp = 1
 
-    # If using ModernBERT, set target moduels to ["Wqkv"]
+    # NOTE: For ModernBERT, use target_modules=["Wqkv"] instead of the default
     lora_config = LoraConfig(
         r=8,
         lora_alpha=16,
@@ -147,7 +165,7 @@ for _ in range(args.runs):
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     training_args = TrainingArguments(
-        output_dir="hyperpartisanship_classification",
+        output_dir=f"output/{args.dataset_name}",
         learning_rate=lr,
         lr_scheduler_type="constant",
         warmup_ratio=0.1,
@@ -168,7 +186,7 @@ for _ in range(args.runs):
         model=model,
         args=training_args,
         train_dataset=tokenized_dataset["train"],
-        eval_dataset=tokenized_dataset["test"],
+        eval_dataset=tokenized_dataset["validation"],
         data_collator=data_collator,
         compute_metrics=compute_metrics,
     )

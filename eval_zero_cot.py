@@ -1,3 +1,12 @@
+"""Zero-shot and Chain-of-Thought (CoT) evaluation script for LLMs.
+
+Evaluates language models on news classification tasks using zero-shot generic,
+zero-shot specific, codebook, and CoT prompting strategies.
+
+Usage:
+    python eval_zero_cot.py --model_name MODEL --dataset_name DATASET --configuration CONFIG --task_labels LABELS
+"""
+
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -24,6 +33,7 @@ parser.add_argument(
 )
 parser.add_argument("--use_quantization", action="store_true")
 parser.add_argument("--verbose", action="store_true")
+parser.add_argument("--max_retries", type=int, default=5)
 parser.add_argument("--dataset_name", type=str)
 parser.add_argument(
     "--configuration",
@@ -49,6 +59,19 @@ parser.add_argument(
     help="Format of the labels in the model's output: 'string' for text labels or 'int' for integer labels",
 )
 args = parser.parse_args()
+
+# Validate language-task combinations
+valid_languages = {
+    "hp": ["en"],
+    "pl": ["en"],
+    "fn": ["en", "es", "pt"],
+    "ht": ["en", "bg", "ar"],
+}
+if args.task_labels in valid_languages and args.language not in valid_languages[args.task_labels]:
+    parser.error(
+        f"Language '{args.language}' is not supported for task '{args.task_labels}'. "
+        f"Supported: {valid_languages[args.task_labels]}"
+    )
 
 print("Parsed Arguments:", args)
 
@@ -149,7 +172,7 @@ print("-" * 25)
 def parse_label(model_output):
     # match = re.search(r"(?:\s*==>|\s*:)\s*(?:\*\*)?([^\s*]+)(?:\*\*)?", model_output)
     # match = re.search(r"==>\s*([^\s]+)", model_output)
-    match = re.search(r"==>\s*(\w+)", model_output)
+    match = re.search(r"==>\s*(.+)", model_output)
 
     if not match:
         return None
@@ -227,6 +250,7 @@ def generate(model, tokenizer, prompt, element, do_sample=False, temperature=0.0
 # ---- Inference
 results = {}
 model_outputs = {}
+unparseable_outputs = []
 
 irregular_outputs = 0
 regularized_outputs = 0
@@ -249,13 +273,12 @@ for idx, element in enumerate(dataset["test"]):
 
     if parsed_label is None:
         irregular_outputs += 1
-        max_retries = 5
         retry_count = 0
 
         print(f" > Irregular output at element #{idx}:  ", pred)
         print("*" * 5, "Trying to resolve irregularity", "*" * 5)
 
-        while retry_count < max_retries:
+        while retry_count < args.max_retries:
             pred = generate(
                 model,
                 tokenizer,
@@ -281,8 +304,9 @@ for idx, element in enumerate(dataset["test"]):
                     " >> Failed to get valid prediction after max retries.\n > Forcefully considered false prediction."
                 )
                 skipped_items += 1
+                unparseable_outputs.append({"index": idx, "output": pred, "ground_truth": element["label"]})
 
-                fallback_label_int = (element["label"] + 1) % num_labels
+                fallback_label_int = random.randint(0, num_labels - 1)
                 preds.append(fallback_label_int)
                 refs.append(element["label"])
                 continue
@@ -315,5 +339,11 @@ main_run.save("results.json")
 with open("model_outputs.json", "w") as json_file:
     json.dump(model_outputs, json_file, indent=4)
 main_run.save("model_outputs.json")
+
+if unparseable_outputs:
+    print(f" > {len(unparseable_outputs)} unparseable outputs logged to unparseable_outputs.json")
+    with open("unparseable_outputs.json", "w") as json_file:
+        json.dump(unparseable_outputs, json_file, indent=4)
+    main_run.save("unparseable_outputs.json")
 
 main_run.finish()

@@ -24,7 +24,7 @@ This experiment focuses on using supervised learning to fine-tune LoRA (Low-Rank
 To reproduce our findings for any of the datasets, follow these steps:
 
 1. Install dependencies: `pip install -r requirements.txt`
-2. Use `python prepare_data.py --dataset DATASET_NAME --language LANGUAGE` to prepare the dataset you want to test.
+2. Use `python prepare_data.py --dataset_name DATASET_NAME --language LANGUAGE` to prepare the dataset you want to test.
 3. Execute the training script:
    - For encoder models: `python train_encoder_seq_cls.py --model_name MODEL --epochs 3 --runs 5`
    - For decoder models: `python train_decoder_seq_cls.py --model_name MODEL --epochs 3 --runs 5`
@@ -51,7 +51,7 @@ This experiment investigates the effectiveness of prompts with varying levels of
 To reproduce our findings for any of the datasets, follow these steps:
 
 1. Install dependencies: `pip install -r requirements.txt`
-2. Use `python prepare_data.py --dataset DATASET_NAME --language LANGUAGE` to prepare the dataset you want to test.
+2. Use `python prepare_data.py --dataset_name DATASET_NAME --language LANGUAGE` to prepare the dataset you want to test.
 3. Execute the training script for the corresponding configuration:
    1. Zero-shot/CoT: `python eval_zero_cot.py --model_name MODEL_NAME --dataset_name DATASET_NAME --configuration zero_shot_generic --task_labels LABELS --label_type LABEL_TYPE --language LANGUAGE --verbose`
    2. Few-shot: `python eval_few_shot.py --model_name MODEL_NAME --dataset_name DATASET_NAME --configuration CONFIGURATION --task_labels LABELS --label_type LABEL_TYPE --verbose --language LANGUAGE`

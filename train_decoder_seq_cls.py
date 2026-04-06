@@ -1,3 +1,10 @@
+"""Fine-tuning script for decoder-based models (Llama, Mistral, Qwen, etc.)
+using LoRA adapters for sequence classification.
+
+Usage:
+    python train_decoder_seq_cls.py --model_name MODEL --epochs 3 --runs 5
+"""
+
 import torch
 from transformers import (
     AutoModelForSequenceClassification,
@@ -8,10 +15,9 @@ from transformers import (
     BitsAndBytesConfig,
 )
 from peft import LoraConfig, get_peft_model
-from datasets import DatasetDict, Dataset, load_dataset
+from datasets import load_dataset, Value
 import numpy as np
 import evaluate
-import pandas as pd
 import wandb
 import argparse
 import json
@@ -59,8 +65,19 @@ dataset_path_test = f"./processed_data/test.json"
 dataset = load_dataset(
     "json", data_files={"train": dataset_path_train, "test": dataset_path_test}
 )
+
+# Create a validation split from the training data
+train_val_split = dataset["train"].train_test_split(test_size=0.1, seed=42)
+dataset["train"] = train_val_split["train"]
+dataset["validation"] = train_val_split["test"]
+
 print(dataset)
 print(dataset["train"][0])
+
+# Ensure labels are integers (some datasets save labels as strings in JSON)
+for split in dataset:
+    dataset[split] = dataset[split].cast_column("label", Value("int64"))
+
 num_labels = len(dataset["train"].unique("label"))
 print(" > Label num: ", num_labels)
 
@@ -82,7 +99,7 @@ for _ in range(args.runs):
 
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name,
-        device_map=device,
+        device_map="auto" if args.use_quantization else device,
         num_labels=num_labels,
         quantization_config=quantization_config,
     )
@@ -153,7 +170,7 @@ for _ in range(args.runs):
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     training_args = TrainingArguments(
-        output_dir="hyperpartisanship_classification",
+        output_dir=f"output/{args.dataset_name}",
         learning_rate=lr,
         lr_scheduler_type="constant",
         warmup_ratio=0.1,
@@ -174,7 +191,7 @@ for _ in range(args.runs):
         model=model,
         args=training_args,
         train_dataset=tokenized_dataset["train"],
-        eval_dataset=tokenized_dataset["test"],
+        eval_dataset=tokenized_dataset["validation"],
         data_collator=data_collator,
         compute_metrics=compute_metrics,
     )

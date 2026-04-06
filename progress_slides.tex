@@ -7,6 +7,7 @@
 \usepackage{adjustbox}
 \usepackage{xcolor}
 \usepackage{tikz}
+\usepackage{multirow}
 
 % Custom colors
 \definecolor{bestcolor}{RGB}{0,100,0}
@@ -14,8 +15,8 @@
 % Bold + color helper for best scores
 \newcommand{\best}[1]{\textcolor{bestcolor}{\textbf{#1}}}
 
-\title[Progress Report]{Comparative Analysis of Transformer Architectures\\for News Classification}
-\subtitle{Progress Recording -- Initial Experiment Results}
+\title[Progress Report]{Comparative Analysis of Transformer Architectures\\for Multilingual News Classification}
+\subtitle{Progress Recording -- Experiment Results Update}
 \author{Experiment Team}
 \institute{Supervised Fine-Tuning with LoRA Adapters}
 \date{\today}
@@ -43,16 +44,16 @@
 % Slide 3: Project Overview
 \begin{frame}{Project Overview}
   \begin{block}{Research Goal}
-    Compare transformer encoder architectures on multilingual political and
-    fake news classification using \textbf{LoRA} (Low-Rank Adaptation)
+    Compare transformer encoder architectures on \textbf{multilingual} political
+    and fake news classification using \textbf{LoRA} (Low-Rank Adaptation)
     parameter-efficient fine-tuning.
   \end{block}
 
   \vspace{0.3cm}
   \textbf{Key aspects:}
   \begin{itemize}
-    \item Four encoder models evaluated across five English-language datasets
-    \item Two task types: binary classification and multi-class classification
+    \item Four encoder models evaluated across \textbf{8 datasets} in \textbf{3 languages} (English, Bulgarian, Arabic)
+    \item Task types: binary classification (hyperpartisan, fake news, harmful tweet detection) and multi-class classification (political leaning, propaganda detection)
     \item Metrics: \textbf{Accuracy} and \textbf{Weighted F1-Score}
     \item Each experiment averaged over \textbf{5 runs} for reliability
   \end{itemize}
@@ -66,60 +67,38 @@
 \begin{frame}{Datasets Overview}
   \begin{table}
     \centering
-    \small
+    \scriptsize
     \begin{adjustbox}{max width=\textwidth}
-    \begin{tabular}{llccc}
+    \begin{tabular}{llcccc}
       \toprule
-      \textbf{Dataset} & \textbf{Task} & \textbf{Classes} & \textbf{Approx.\ Size} & \textbf{Labels} \\
+      \textbf{Dataset} & \textbf{Task} & \textbf{Language} & \textbf{Classes} & \textbf{Approx.\ Size} & \textbf{Labels} \\
       \midrule
-      Hyperpartisan News Headlines & Hyperpartisan detection & 2 & 2,200 & neutral / hyperpartisan \\
-      SemEval 2019                 & Hyperpartisan detection & 2 & 1,275 & neutral / hyperpartisan \\
-      All Sides                    & Political leaning       & 3 & 45,411 & left / center / right \\
-      Fake News Net                & Fake news detection     & 2 & 23,200 & true / fake \\
-      CLEF 3A                      & Propaganda detection    & 3 & 206,373 & multi-level propaganda \\
+      Hyperpartisan News Headlines & Hyperpartisan detection & English    & 2 & 2,200   & neutral / hyperpartisan \\
+      SemEval 2019                 & Hyperpartisan detection & English    & 2 & 1,275   & neutral / hyperpartisan \\
+      All Sides                    & Political leaning       & English    & 3 & 45,411  & left / center / right \\
+      Fake News Net                & Fake news detection     & English    & 2 & 23,200  & true / fake \\
+      CLEF 3A                      & Propaganda detection    & English    & 3 & 206,373 & multi-level propaganda \\
+      \midrule
+      CLEF 1C (en)                 & Harmful tweet detection & English    & 2 & 3,574   & neutral / harmful \\
+      CLEF 1C (bg)                 & Harmful tweet detection & Bulgarian  & 2 & 3,033   & neutral / harmful \\
+      CLEF 1C (ar)                 & Harmful tweet detection & Arabic     & 2 & 4,825   & neutral / harmful \\
       \bottomrule
     \end{tabular}
     \end{adjustbox}
   \end{table}
 
-  \vspace{0.2cm}
+  \vspace{0.15cm}
   \begin{itemize}
-    \item Datasets span \textbf{3 distinct news classification tasks}: hyperpartisan detection, political leaning, and fake news / propaganda detection.
-    \item Dataset sizes vary significantly -- from $\sim$1.3K to $\sim$206K samples.
+    \item \textbf{5 English} news/article datasets + \textbf{3 multilingual} CLEF 1C tweet datasets (en/bg/ar).
+    \item CLEF 1C datasets are \textbf{highly imbalanced}: 77--91\% neutral class.
   \end{itemize}
-\end{frame}
-
-% Slide 5: Dataset Details
-\begin{frame}{Dataset Details}
-  \begin{columns}[T]
-    \begin{column}{0.48\textwidth}
-      \textbf{Binary Classification (2 classes):}
-      \begin{itemize}
-        \item \textbf{Hyperpartisan News Headlines}: Short news headlines labeled as neutral or hyperpartisan.
-        \item \textbf{SemEval 2019}: Shared task data for hyperpartisan news detection; smaller, curated corpus.
-        \item \textbf{Fake News Net}: Articles from PolitiFact and GossipCop labeled as true or fake.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.48\textwidth}
-      \textbf{Multi-class Classification (3 classes):}
-      \begin{itemize}
-        \item \textbf{All Sides}: Political bias of news articles classified as left, center, or right.
-        \item \textbf{CLEF 3A}: Propaganda detection across multiple levels of intensity.
-      \end{itemize}
-
-      \vspace{0.5cm}
-      \begin{alertblock}{Note}
-        Multi-class tasks are inherently harder; lower scores are expected.
-      \end{alertblock}
-    \end{column}
-  \end{columns}
 \end{frame}
 
 % ============================================================
 \section{Experiment Setup}
 % ============================================================
 
-% Slide 6: Models & LoRA Configuration
+% Slide 5: Models & LoRA Configuration
 \begin{frame}{Models \& LoRA Configuration}
   \begin{columns}[T]
     \begin{column}{0.48\textwidth}
@@ -154,7 +133,7 @@
   \end{columns}
 \end{frame}
 
-% Slide 7: Training Hyperparameters
+% Slide 6: Training Hyperparameters
 \begin{frame}{Training Hyperparameters}
   \begin{columns}[T]
     \begin{column}{0.48\textwidth}
@@ -197,43 +176,89 @@
 \section{Experiment Results}
 % ============================================================
 
-% Slide 8: Results Table
-\begin{frame}{Experiment Results -- Accuracy \& Weighted F1}
+% Slide 7: Full Results Table
+\begin{frame}{Experiment Results -- Full Table}
   \begin{table}
     \centering
-    \small
+    \scriptsize
     \begin{adjustbox}{max width=\textwidth}
-    \begin{tabular}{llccccc}
+    \begin{tabular}{llcccccccc}
       \toprule
       \textbf{Model} & \textbf{Metric}
-        & \textbf{Hyperpartisan} & \textbf{SemEval 2019}
-        & \textbf{All Sides} & \textbf{Fake News Net}
-        & \textbf{CLEF 3A} \\
+        & \textbf{Hyperpartisan} & \textbf{SemEval}
+        & \textbf{All Sides} & \textbf{FakeNewsNet}
+        & \textbf{CLEF 3A}
+        & \textbf{CLEF 1C\_en} & \textbf{CLEF 1C\_bg} & \textbf{CLEF 1C\_ar} \\
       \midrule
       \multirow{2}{*}{roberta-base}
-        & Acc      & 0.7950          & \best{0.8684} & 0.6524          & 0.8574          & 0.7106 \\
-        & F1       & 0.7905          & \best{0.8676} & 0.6434          & 0.8464          & 0.7184 \\
+        & Acc & 0.7950          & \best{0.8684} & 0.6524          & 0.8574          & 0.7106          & 0.7277          & \best{0.9661} & \best{0.8351} \\
+        & F1  & 0.7905          & \best{0.8676} & 0.6434          & 0.8464          & 0.7184          & 0.7572          & \best{0.9495} & 0.7815 \\
       \midrule
       \multirow{2}{*}{roberta-large}
-        & Acc      & \best{0.8593}   & 0.8556        & \best{0.7139}   & \best{0.8644}   & \best{0.7546} \\
-        & F1       & \best{0.8552}   & 0.8549        & \best{0.7057}   & \best{0.8548}   & \best{0.7585} \\
+        & Acc & \best{0.8593}   & 0.8556        & \best{0.7139}   & \best{0.8644}   & \best{0.7546}   & 0.7636          & \best{0.9661} & 0.8312 \\
+        & F1  & \best{0.8552}   & 0.8549        & \best{0.7057}   & \best{0.8548}   & \best{0.7585}   & \best{0.7909}   & \best{0.9495} & 0.7935 \\
       \midrule
       \multirow{2}{*}{ModernBERT-base}
-        & Acc      & 0.7538          & 0.8009        & 0.6046          & 0.8528          & 0.6342 \\
-        & F1       & 0.7302          & 0.8006        & 0.5901          & 0.8413          & 0.6364 \\
+        & Acc & 0.7538          & 0.8009        & 0.6046          & 0.8528          & 0.6342          & 0.7184          & 0.9495        & 0.8087 \\
+        & F1  & 0.7302          & 0.8006        & 0.5901          & 0.8413          & 0.6364          & 0.7457          & \best{0.9495} & \best{0.8087} \\
       \midrule
       \multirow{2}{*}{POLITICS}
-        & Acc      & 0.8358          & 0.8444        & 0.6937          & 0.8586          & 0.7160 \\
-        & F1       & 0.8333          & 0.8435        & 0.6852          & 0.8505          & 0.7201 \\
+        & Acc & 0.8358          & 0.8444        & 0.6937          & 0.8586          & 0.7160          & \best{0.7662}   & \best{0.9661} & 0.8281 \\
+        & F1  & 0.8333          & 0.8435        & 0.6852          & 0.8505          & 0.7201          & 0.7825          & \best{0.9495} & 0.8055 \\
       \bottomrule
     \end{tabular}
     \end{adjustbox}
   \end{table}
 
-  \vspace{0.2cm}
+  \vspace{0.1cm}
   \centering
-  \small
-  \textcolor{bestcolor}{\textbf{Bold green}} = best score per dataset. All results averaged over 5 runs.
+  \scriptsize
+  \textcolor{bestcolor}{\textbf{Bold green}} = best score per dataset column. All results averaged over 5 runs.
+\end{frame}
+
+% Slide 8: Multilingual CLEF 1C Spotlight
+\begin{frame}{Spotlight: Multilingual CLEF 1C Results}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \begin{table}
+        \centering
+        \small
+        \begin{adjustbox}{max width=\textwidth}
+        \begin{tabular}{llccc}
+          \toprule
+          \textbf{Model} & \textbf{Metric}
+            & \textbf{English} & \textbf{Bulgarian} & \textbf{Arabic} \\
+          \midrule
+          \multirow{2}{*}{roberta-base}
+            & Acc & 0.7277          & \best{0.9661} & \best{0.8351} \\
+            & F1  & 0.7572          & \best{0.9495} & 0.7815 \\
+          \midrule
+          \multirow{2}{*}{roberta-large}
+            & Acc & 0.7636          & \best{0.9661} & 0.8312 \\
+            & F1  & \best{0.7909}   & \best{0.9495} & 0.7935 \\
+          \midrule
+          \multirow{2}{*}{ModernBERT}
+            & Acc & 0.7184          & 0.9495        & 0.8087 \\
+            & F1  & 0.7457          & \best{0.9495} & \best{0.8087} \\
+          \midrule
+          \multirow{2}{*}{POLITICS}
+            & Acc & \best{0.7662}   & \best{0.9661} & 0.8281 \\
+            & F1  & 0.7825          & \best{0.9495} & 0.8055 \\
+          \bottomrule
+        \end{tabular}
+        \end{adjustbox}
+      \end{table}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \textbf{Key observations:}
+      \begin{itemize}
+        \item \textbf{Bulgarian} is nearly solved: all models $\geq$0.95 F1 (heavily imbalanced toward neutral)
+        \item \textbf{Arabic}: ModernBERT achieves best F1 (0.809) despite trailing on English tasks
+        \item \textbf{English} is the hardest CLEF 1C split; POLITICS leads in Acc
+        \item English-only models perform surprisingly well on non-English tweets
+      \end{itemize}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 % ============================================================
@@ -243,35 +268,34 @@
 % Slide 9: Key Findings (1)
 \begin{frame}{Key Findings (1/2)}
   \begin{block}{1.\ RoBERTa-large is the overall best model}
-    Achieves the highest scores on \textbf{4 out of 5} datasets (Hyperpartisan, All Sides, Fake News Net, CLEF 3A). Scaling from base to large yields consistent improvements of \textbf{+3--6\%} on most tasks.
+    Achieves the highest scores on \textbf{5+ out of 8} datasets across metrics. Scaling from base to large yields consistent improvements of \textbf{+3--6\%} on English tasks.
   \end{block}
 
   \begin{block}{2.\ POLITICS benefits from domain-specific pre-training}
-    Despite being a base-sized model, \texttt{launch/POLITICS} ranks \textbf{2nd overall} and narrows the gap with roberta-large on political tasks:
+    Despite being a base-sized model, ranks \textbf{2nd overall} and narrows the gap with roberta-large on political tasks:
     \begin{itemize}
       \item All Sides: 0.694 Acc vs.\ roberta-base's 0.652 (\textbf{+4.1\%})
-      \item Hyperpartisan: 0.836 Acc vs.\ roberta-base's 0.795 (\textbf{+4.1\%})
+      \item CLEF 1C (en): best accuracy at 0.766, outperforming roberta-large's 0.764
     \end{itemize}
-    This confirms that \textbf{domain-specific pre-training} provides meaningful gains.
+  \end{block}
+
+  \begin{block}{3.\ SemEval 2019 anomaly: smaller model wins}
+    RoBERTa-base \textbf{outperforms} roberta-large (0.868 vs.\ 0.856 Acc). The small dataset ($\sim$1.3K) likely causes the larger model to overfit.
   \end{block}
 \end{frame}
 
 % Slide 10: Key Findings (2)
 \begin{frame}{Key Findings (2/2)}
-  \begin{block}{3.\ ModernBERT-base underperforms expectations}
-    Lowest scores on 4 of 5 datasets despite being a newer architecture. Potential causes:
-    \begin{itemize}
-      \item LoRA target modules (\texttt{Wqkv}) may need further tuning
-      \item Architecture novelty may not translate to this task domain
-    \end{itemize}
+  \begin{block}{4.\ English-only models transfer surprisingly well to non-English tasks}
+    On CLEF 1C Bulgarian, all models achieve $\geq$0.95 F1. On Arabic, roberta-base leads with 0.835 Acc. This suggests English-centric models can exploit \textbf{structural and lexical overlap} in tweet-level classification.
   \end{block}
 
-  \begin{block}{4.\ Multi-class tasks are significantly harder}
-    All Sides (3-class) has the lowest scores across all models (best: 0.714 Acc). Binary tasks (Fake News Net, SemEval) are substantially easier, with most models exceeding 0.84 accuracy.
+  \begin{block}{5.\ ModernBERT shows strength on Arabic despite overall weakness}
+    While ModernBERT-base underperforms on most English tasks, it achieves the \textbf{best F1 on Arabic} CLEF 1C (0.809), suggesting its architecture may handle certain cross-lingual patterns better.
   \end{block}
 
-  \begin{block}{5.\ SemEval 2019 anomaly}
-    RoBERTa-base \textbf{outperforms} roberta-large on SemEval 2019 (0.868 vs.\ 0.856). The small dataset size ($\sim$1.3K) may cause the larger model to overfit.
+  \begin{block}{6.\ Task and class complexity dominate difficulty}
+    Multi-class tasks (All Sides, CLEF 3A) remain the hardest. CLEF 1C Bulgarian appears easiest due to extreme class imbalance ($\sim$87\% neutral) -- high scores may reflect majority-class bias.
   \end{block}
 \end{frame}
 
@@ -291,26 +315,26 @@
       \end{itemize}
 
       \vspace{0.3cm}
-      \textbf{Multilingual Evaluation:}
+      \textbf{Multilingual Extensions:}
       \begin{itemize}
-        \item Test on remaining datasets: Fake.br (Portuguese), FakeNewsCorpus (Spanish), CLEF 1C (Bulgarian, Arabic)
-        \item Use multilingual encoders: XLM-RoBERTa, mDeBERTa
+        \item Add dedicated multilingual encoders: XLM-RoBERTa, mDeBERTa
+        \item Evaluate on remaining languages: Portuguese (Fake.br), Spanish (FakeNewsCorpus)
       \end{itemize}
     \end{column}
     \begin{column}{0.48\textwidth}
       \textbf{Methodological Improvements:}
       \begin{itemize}
         \item Hyperparameter search for LoRA rank, alpha, and target modules (especially for ModernBERT)
-        \item Report confidence intervals / standard deviations from the 5 runs
-        \item Investigate the SemEval anomaly with per-run analysis
+        \item Report confidence intervals / standard deviations
+        \item Class-balanced evaluation metrics for imbalanced CLEF 1C datasets
       \end{itemize}
 
       \vspace{0.3cm}
-      \textbf{Additional Analyses:}
+      \textbf{Deeper Analysis:}
       \begin{itemize}
-        \item Confusion matrix analysis for multi-class tasks
-        \item Effect of dataset size on model performance
-        \item Computational cost comparison across models
+        \item Confusion matrices for multi-class and imbalanced tasks
+        \item Cross-lingual transfer analysis: why do English models work on bg/ar?
+        \item Computational cost comparison
       \end{itemize}
     \end{column}
   \end{columns}
@@ -322,26 +346,27 @@
 \begin{frame}{Summary}
   \begin{center}
     \begin{tikzpicture}
-      \node[draw, rounded corners, fill=blue!10, minimum width=12cm, minimum height=1.2cm] {
-        \textbf{RoBERTa-large} is the best overall model; \textbf{POLITICS} shows domain pre-training value
+      \node[draw, rounded corners, fill=blue!10, minimum width=12cm, minimum height=1.2cm, text width=11.5cm, align=center] {
+        \textbf{RoBERTa-large} leads overall; \textbf{POLITICS} excels on political tasks;\\
+        English-only models transfer well to Bulgarian and Arabic
       };
     \end{tikzpicture}
   \end{center}
 
-  \vspace{0.3cm}
+  \vspace{0.2cm}
   \textbf{Completed:}
   \begin{itemize}
-    \item[\checkmark] Benchmarked 4 encoder models on 5 English news classification datasets
+    \item[\checkmark] Benchmarked 4 encoder models on \textbf{8 datasets} across \textbf{3 languages}
     \item[\checkmark] Established LoRA fine-tuning baselines with 5-run averages
-    \item[\checkmark] Identified scaling, domain pre-training, and task complexity effects
+    \item[\checkmark] Identified scaling, domain pre-training, cross-lingual transfer, and task complexity effects
   \end{itemize}
 
-  \vspace{0.3cm}
+  \vspace{0.2cm}
   \textbf{Next Steps:}
   \begin{itemize}
     \item[$\rightarrow$] Decoder model evaluation and in-context learning experiments
-    \item[$\rightarrow$] Multilingual dataset evaluation
-    \item[$\rightarrow$] Hyperparameter tuning and statistical significance testing
+    \item[$\rightarrow$] Dedicated multilingual models (XLM-RoBERTa, mDeBERTa) for non-English tasks
+    \item[$\rightarrow$] Class-balanced metrics and deeper cross-lingual transfer analysis
   \end{itemize}
 \end{frame}
 

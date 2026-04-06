@@ -70,7 +70,11 @@ def prepare_allsides(dataset_path):
         example["label"] = labels.index(example["bias_rating"])
         return example
 
-    return dataset.map(concatenate_header_text)
+    dataset = dataset.map(concatenate_header_text)
+    # Ensure label column is stored as int
+    for split in dataset:
+        dataset[split] = dataset[split].cast_column("label", Value("int64"))
+    return dataset
 
 
 ### FAKE-BR ###
@@ -86,7 +90,12 @@ def prepare_fakebr_corpus(dataset_path):
         element["label"] = ["fake", "true"].index(element["label"])
         return element
 
-    return dataset.map(format_func)
+    dataset = dataset.map(format_func)
+    # Ensure label column is stored as int (CSV loader infers string type from
+    # original "fake"/"true" values, which persists even after map converts to int)
+    for split in dataset:
+        dataset[split] = dataset[split].cast_column("label", Value("int64"))
+    return dataset
 
 
 ### FAKE NEWS CORPUS SPANISH ###
@@ -127,7 +136,11 @@ def prepare_fake_news_corpus_spanish(dataset_path):
             element["label"] = bool_labels.index(element["Category"])
         return element
 
-    return dataset.map(format_func2)
+    dataset = dataset.map(format_func2)
+    # Ensure label column is stored as int
+    for split in dataset:
+        dataset[split] = dataset[split].cast_column("label", Value("int64"))
+    return dataset
 
 
 ### FAKE NEWS NET ###

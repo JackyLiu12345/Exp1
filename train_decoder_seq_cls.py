@@ -15,7 +15,7 @@ from transformers import (
     BitsAndBytesConfig,
 )
 from peft import LoraConfig, get_peft_model
-from datasets import load_dataset
+from datasets import load_dataset, Value
 import numpy as np
 import evaluate
 import wandb
@@ -73,6 +73,11 @@ dataset["validation"] = train_val_split["test"]
 
 print(dataset)
 print(dataset["train"][0])
+
+# Ensure labels are integers (some datasets save labels as strings in JSON)
+for split in dataset:
+    dataset[split] = dataset[split].cast_column("label", Value("int64"))
+
 num_labels = len(dataset["train"].unique("label"))
 print(" > Label num: ", num_labels)
 

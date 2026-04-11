@@ -36,7 +36,7 @@ _Example:_ `python train_encoder_seq_cls.py --model_name MODEL --language Bulgar
 
 #### ICL experiment
 
-This experiment investigates the effectiveness of prompts with varying levels of reasoning complexity, utilizing Few-shot learning and Chain-of-Thought (CoT) approaches. The prompts, detailed in the Appendix tables, range from simple to more elaborate reasoning structures. To conduct this experiment, we employed a computing infrastructure consisting of two Tesla P40 GPUs and one NVIDIA GeForce RTX 2080 Ti GPU.
+This experiment investigates the effectiveness of prompts with varying levels of reasoning complexity, utilizing Few-shot learning and Chain-of-Thought (CoT) approaches. The prompts, detailed in the Appendix tables, range from simple to more elaborate reasoning structures. To conduct this experiment, we employed a single A40 NVIDIA GPU.
 
 ##### Models tested:
 

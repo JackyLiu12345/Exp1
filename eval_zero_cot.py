@@ -291,27 +291,24 @@ for idx, element in enumerate(dataset["test"]):
 
             if parse_label(pred) is not None:
                 print(" >> Regularized output: ", pred)
-                parsed_label = parse_label(pred)
-                print(f" > Pred #{idx}: ", parsed_label)
-
                 regularized_outputs += 1
                 break
 
             retry_count += 1
 
-            if retry_count == args.max_retries:
-                print(
-                    " >> Failed to get valid prediction after max retries.\n > Forcefully considered false prediction."
-                )
-                skipped_items += 1
-                unparseable_outputs.append({"index": idx, "output": pred, "ground_truth": element["label"]})
+        if retry_count == args.max_retries:
+            print(
+                " >> Failed to get valid prediction after max retries.\n > Forcefully considered false prediction."
+            )
+            skipped_items += 1
+            unparseable_outputs.append({"index": idx, "output": pred, "ground_truth": element["label"]})
 
-                fallback_label_int = random.randint(0, num_labels - 1)
-                preds.append(fallback_label_int)
-                refs.append(element["label"])
-                continue
+            fallback_label_int = random.randint(0, num_labels - 1)
+            preds.append(fallback_label_int)
+            refs.append(element["label"])
+            continue
 
-    preds.append(parsed_label)
+    preds.append(parse_label(pred))
     refs.append(element["label"])
 
 results = compute_metrics(preds, refs)
